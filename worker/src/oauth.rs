@@ -1,6 +1,6 @@
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use rand::{Rng, distr::Alphanumeric};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use worker::{
     Date, Error, Fetch, Headers, Method, Request, RequestInit, Result, RouteContext, Url,
@@ -16,10 +16,11 @@ const GOOGLE_SCOPES: &str =
 
 // Security parameters
 const STATE_LENGTH: usize = 24;
+const ID_LENGTH: usize = 32;
 const VERIFIER_LENGTH: usize = 64;
 
 /// Represents an OAuth 2.0 access token response from Google.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Token {
     pub access_token: String,
     pub refresh_token: String,
@@ -30,12 +31,16 @@ pub struct Token {
 }
 
 /// Generates a cryptographically secure random string of the specified length.
-fn generate_random_string(length: usize) -> String {
+pub fn generate_random_string(length: usize) -> String {
     rand::rng()
         .sample_iter(&Alphanumeric)
         .take(length)
         .map(char::from)
         .collect()
+}
+
+pub fn generate_session_id() -> String {
+    generate_random_string(ID_LENGTH)
 }
 
 /// Generates a PKCE code challenge from a verifier string.
