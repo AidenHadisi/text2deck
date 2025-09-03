@@ -1,0 +1,20 @@
+name = "text2deck-worker"
+main = "build/worker.js"
+compatibility_date = "2024-09-02"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+[vars]
+# Add your environment variables here
+# GOOGLE_REDIRECT_URI = "https://your-worker-domain.workers.dev/oauth/callback"
+
+[[kv_namespaces]]
+binding = "TOKENS"
+id = "your-kv-namespace-id-here"
+preview_id = "your-preview-kv-namespace-id-here"
+
+# You'll need to set these as secrets:
+# wrangler secret put GOOGLE_CLIENT_ID
+# wrangler secret put GOOGLE_CLIENT_SECRET
+# wrangler secret put GOOGLE_REDIRECT_URI

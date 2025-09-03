@@ -1,0 +1,33 @@
+[workspace]
+members = ["worker", "web"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Aiden Hadisi <aiden.hadisi@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/AidenHadisi/text2deck"
+description = "Convert text to presentation slides"
+keywords = ["presentation", "slides", "text", "generator"]
+categories = ["web-programming", "wasm"]
+readme = "README.md"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+unused_lifetimes = "warn"
+unused_crate_dependencies = "warn"
+redundant_imports = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"
+nursery = "warn"
+cargo = "warn"
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "2.0"

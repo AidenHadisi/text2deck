@@ -6,18 +6,19 @@ use worker::{
     Date, Error, Fetch, Headers, Method, Request, RequestInit, Result, RouteContext, Url,
 };
 
-// OAuth URLs
-const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
-const GOOGLE_TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
+pub mod config {
+    pub mod oauth {
+        pub const AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
+        pub const TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
+        pub const SCOPES: &str = "https://www.googleapis.com/auth/presentations https://www.googleapis.com/auth/drive.file";
+    }
 
-// OAuth configuration
-const GOOGLE_SCOPES: &str =
-    "https://www.googleapis.com/auth/presentations https://www.googleapis.com/auth/drive.file";
-
-// Security parameters
-const STATE_LENGTH: usize = 24;
-const ID_LENGTH: usize = 32;
-const VERIFIER_LENGTH: usize = 64;
+    pub mod security {
+        pub const STATE_LENGTH: usize = 24;
+        pub const ID_LENGTH: usize = 32;
+        pub const VERIFIER_LENGTH: usize = 64;
+    }
+}
 
 /// Represents an OAuth 2.0 access token response from Google.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,7 +41,7 @@ pub fn generate_random_string(length: usize) -> String {
 }
 
 pub fn generate_session_id() -> String {
-    generate_random_string(ID_LENGTH)
+    generate_random_string(config::security::ID_LENGTH)
 }
 
 /// Generates a PKCE code challenge from a verifier string.
@@ -54,16 +55,16 @@ pub async fn start(ctx: &RouteContext<()>) -> Result<(Url, String, String)> {
     let client_id = ctx.var("GOOGLE_CLIENT_ID")?.to_string();
     let redirect_uri = ctx.var("GOOGLE_REDIRECT_URI")?.to_string();
 
-    let state = generate_random_string(STATE_LENGTH);
-    let verifier = generate_random_string(VERIFIER_LENGTH);
+    let state = generate_random_string(config::security::STATE_LENGTH);
+    let verifier = generate_random_string(config::security::VERIFIER_LENGTH);
     let challenge = generate_pkce_challenge(&verifier);
 
-    let mut url = Url::parse(GOOGLE_AUTH_URL)?;
+    let mut url = Url::parse(config::oauth::AUTH_URL)?;
     url.query_pairs_mut()
         .append_pair("client_id", &client_id)
         .append_pair("redirect_uri", &redirect_uri)
         .append_pair("response_type", "code")
-        .append_pair("scope", GOOGLE_SCOPES)
+        .append_pair("scope", config::oauth::SCOPES)
         .append_pair("state", &state)
         .append_pair("code_challenge", &challenge)
         .append_pair("code_challenge_method", "S256")
@@ -98,7 +99,7 @@ pub async fn exchange(ctx: &RouteContext<()>, code: &str, verifier: &str) -> Res
         .with_body(Some(body.into()))
         .with_headers(headers);
 
-    let request = Request::new_with_init(GOOGLE_TOKEN_URL, &init)?;
+    let request = Request::new_with_init(config::oauth::TOKEN_URL, &init)?;
     let mut response = Fetch::Request(request).send().await?;
 
     let mut token: Token = response.json().await?;
